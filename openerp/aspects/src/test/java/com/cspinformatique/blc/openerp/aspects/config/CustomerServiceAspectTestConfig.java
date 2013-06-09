@@ -27,6 +27,8 @@ public class CustomerServiceAspectTestConfig {
 		
 		Customer customer = CustomerTestData.getCustomer();
 		
+		Mockito.when(customerService.saveCustomer(customer, false)).thenReturn(customer);
+		
 		Mockito.when(
 			customerService.registerCustomer(customer, customer.getPassword(), customer.getPassword()
 		)).thenReturn(customer);

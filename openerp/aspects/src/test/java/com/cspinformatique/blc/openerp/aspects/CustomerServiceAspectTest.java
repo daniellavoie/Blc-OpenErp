@@ -1,6 +1,7 @@
 package com.cspinformatique.blc.openerp.aspects;
 
 import org.broadleafcommerce.profile.core.domain.Customer;
+import org.broadleafcommerce.profile.core.domain.CustomerAddress;
 import org.broadleafcommerce.profile.core.service.CustomerService;
 import org.junit.Assert;
 import org.junit.Test;
@@ -41,6 +42,58 @@ public class CustomerServiceAspectTest {
 		
 		// Check that the notification service was properly called through the aspect. 
 		// The customer notification should be present in the test database.
+		Assert.assertNotNull(notificationSerivce.getOldestNotification());
+	}
+	
+	public void saveCustomerAddress(CustomerAddress customerAddress){
+		ApplicationContext context =	new AnnotationConfigApplicationContext(
+											CustomerServiceAspectTestConfig.class,
+											AspectsConfig.class,
+											CustomerServiceAspect.class
+										);
+		
+		CustomerService customerService = context.getBean(CustomerService.class);
+		NotificationService notificationSerivce = context.getBean(NotificationService.class);
+		
+		// Reloading notifer schema.
+		NotifierSchemaUtil.recreateSchema((JdbcTemplate)context.getBean("notifierJdbcTemplate"));
+		BlcSchemaUtil.recreateSchema((JdbcTemplate)context.getBean("blcJdbcTemplate"));
+		
+		// Validating the notification table is empty.
+		Assert.assertNull(notificationSerivce.getOldestNotification());
+		
+		// Save the test customer.
+		customerService.saveCustomer(CustomerTestData.getCustomer());
+		
+		// Check that the notification service was properly called through the aspect. 
+		// The customer notification should be present in the test database.
+		Assert.assertNotNull(notificationSerivce.getOldestNotification());
+	}
+	
+	@Test
+	public void saveCustomerTest(){
+		ApplicationContext context =	new AnnotationConfigApplicationContext(
+											CustomerServiceAspectTestConfig.class,
+											AspectsConfig.class,
+											CustomerServiceAspect.class
+										);
+
+		CustomerService customerService = context.getBean(CustomerService.class);
+		NotificationService notificationSerivce = context.getBean(NotificationService.class);
+		
+		// Reloading notifer schema.
+		NotifierSchemaUtil.recreateSchema((JdbcTemplate)context.getBean("notifierJdbcTemplate"));
+		BlcSchemaUtil.recreateSchema((JdbcTemplate)context.getBean("blcJdbcTemplate"));
+		
+		// Building the test customer.
+		Customer customer = CustomerTestData.getCustomer();
+		
+		// Validate that aspect was not trigered by this call (.
+		customerService.saveCustomer(customer);
+		Assert.assertNull(notificationSerivce.getOldestNotification());
+		
+		// Validates that the aspect was properly triggered. 
+		Assert.assertNotNull(customerService.saveCustomer(customer, false));
 		Assert.assertNotNull(notificationSerivce.getOldestNotification());
 	}
 }
